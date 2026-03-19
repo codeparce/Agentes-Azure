@@ -1,0 +1,75 @@
+---
+- name: Configurar Herramientas Agente Azure DevOps
+  hosts: agent
+  become: true
+
+  tasks:
+    # ─────────────────────────────────────────────
+    # 1. Dependencias base
+    # ─────────────────────────────────────────────
+    - name: Instalar paquetes base
+      apt:
+        name:
+          - libicu-dev
+          - libssl-dev
+          - ca-certificates
+          - unzip
+          - make
+          - gnupg
+          - wget
+          - lsb-release
+          - nodejs
+          - npm
+          - gettext-base
+        state: present
+        update_cache: true
+
+    # ─────────────────────────────────────────────
+    # 2. Terraform
+    # ─────────────────────────────────────────────
+    - name: Agregar GPG key de HashiCorp
+      shell: |
+        wget -O - https://apt.releases.hashicorp.com/gpg | \
+        gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+    - name: Agregar repositorio de HashiCorp
+      shell: |
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+        https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+        | tee /etc/apt/sources.list.d/hashicorp.list
+      args:
+        creates: /etc/apt/sources.list.d/hashicorp.list
+
+    - name: Instalar Terraform
+      apt:
+        name: terraform
+        state: present
+        update_cache: true
+
+    - name: Verificar Terraform
+      command: terraform version
+      register: terraform_version
+      changed_when: false
+
+    - name: Mostrar versión de Terraform
+      debug:
+        msg: "{{ terraform_version.stdout_lines[0] }}"
+
+    # ─────────────────────────────────────────────
+    # 4. Azure Static Web Apps CLI (swa)
+    # ─────────────────────────────────────────────
+    - name: Instalar SWA CLI globalmente via npm
+      shell: /usr/local/bin/npm install -g @azure/static-web-apps-cli
+      args:
+        creates: /usr/local/bin/swa
+
+    - name: Verificar SWA CLI
+      command: /usr/local/bin/swa --version
+      register: swa_ver
+      changed_when: false
+
+    - name: Mostrar versión de SWA CLI
+      debug:
+        msg: "SWA CLI: {{ swa_ver.stdout }}"
