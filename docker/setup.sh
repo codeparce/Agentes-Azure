@@ -1,73 +1,62 @@
 #!/bin/bash
 # =============================================================================
-# Ejecutar dentro del contenedor para tener las herramientas necesarias para el desarrollo local y despliegue
-# La forma ansible esta con inconvenientes, así que se hace manualmente
+# Setup de herramientas para desarrollo local y despliegue en contenedor.
 # =============================================================================
 set -euo pipefail
 
-# ── Colores para output ───────────────────────────────────────────────────────
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-CYAN='\033[1;36m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-ok()   { echo -e "${GREEN}[OK]${NC}    $*"; }
-info() { echo -e "${CYAN}[INFO]${NC}  $*"; }
-warn() { echo -e "${YELLOW}[WARN]${NC}  $*"; }
-fail() { echo -e "${RED}[FAIL]${NC}  $*"; exit 1; }
-
-header() {
-  echo ""
-  echo -e "${CYAN}─────────────────────────────────────────────${NC}"
-  echo -e "${CYAN}  $*${NC}"
-  echo -e "${CYAN}─────────────────────────────────────────────${NC}"
-}
+export DEBIAN_FRONTEND=noninteractive
 
 # =============================================================================
 # 1. Dependencias base
 # =============================================================================
-header "1. Instalando dependencias base"
+echo "1. Dependencias base"
 
-apt-get install -y \
-  libicu-dev \
-  libssl-dev \
-  ca-certificates \
-  unzip \
-  make \
-  gnupg \
-  wget \
-  lsb-release \
-  software-properties-common \
-  gettext-base \
-  && rm -rf /var/lib/apt/lists/*
+apt-get update -qq
+apt-get install -y -qq \
+  ca-certificates curl gnupg wget lsb-release \
+  libicu-dev libssl-dev unzip make \
+  software-properties-common gettext-base
+rm -rf /var/lib/apt/lists/*
 
-ok "Dependencias base instaladas"
+echo "Dependencias instaladas"
 
 # =============================================================================
 # 2. Terraform
 # =============================================================================
-header "2. Instalando Terraform"
+echo "2. Terraform"
 
-wget -O - https://apt.releases.hashicorp.com/gpg |  gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+TMP=$(mktemp)
+wget -qO "$TMP" https://apt.releases.hashicorp.com/gpg
+gpg --batch --yes --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg "$TMP"
+rm -f "$TMP"
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" |  tee /etc/apt/sources.list.d/hashicorp.list
+CODENAME=$(lsb_release -cs)
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+https://apt.releases.hashicorp.com ${CODENAME} main" \
+  > /etc/apt/sources.list.d/hashicorp.list
 
-apt update &&  apt install terraform
+apt-get update -qq
+apt-get install -y -qq terraform
+rm -rf /var/lib/apt/lists/*
 
+echo "Terraform: $(terraform version | head -1)"
 
 # =============================================================================
-# 3. Node.js
+# 3. Node.js 24 (via NodeSource — instalación directa sin n-install)
 # =============================================================================
-curl -fsSL https://raw.githubusercontent.com/mklement0/n-install/stable/bin/n-install | bash -s 24 --y
+echo "3. Node.js 24"
 
+curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+apt-get install -y -qq nodejs
+rm -rf /var/lib/apt/lists/*
+
+echo "Node: $(node --version) | npm: $(npm --version)"
 
 # =============================================================================
-# 4. Azure Static Web Apps CLI (swa)
+# 4. SWA CLI
 # =============================================================================
-header "4. Instalando SWA CLI"
+echo "4. Azure SWA CLI"
 
 npm install -g @azure/static-web-apps-cli
 
-
-
+echo "SWA: $(swa --version 2>/dev/null || echo instalado)"

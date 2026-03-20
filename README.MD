@@ -17,7 +17,7 @@ sudo ./svc.sh uninstall # desinstalar el servicio
 
 ## Agentes en Docker
 
-Correr agentes en contenedores, todos apuntando al mismo pool, pero con nombres diferentes para ejecutar jobs en paralelo. en la [documentación oficial](https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/docker?view=azure-devops) explica las formas de hacerlo para imágenes windows y linux.
+Correr agentes en contenedores, los agentes se puden crear al mismo pool o difrenentes, esto puede lelgar a servir para ejcutar jobs en paralelo. en la [documentación oficial](https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/docker?view=azure-devops) explica las formas de hacerlo para imágenes windows y linux.
 
 [*Ejemplo en linux*](docker)
 

@@ -9,9 +9,6 @@ RUN apt-get update && apt-get install -y \
 # Install Azure CLI
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
-# Crear usuario no-root para el agente
-#RUN useradd -m -s /bin/bash azpagent
-
 # Establecer el directorio de trabajo
 WORKDIR /azp
 
@@ -20,12 +17,8 @@ COPY start.sh .
 COPY setup.sh /tmp/setup.sh
 RUN sed -i 's/\r$//' start.sh  && chmod +x start.sh 
 
-## Cambiar la propiedad de los archivos al usuario no-root
-#RUN chown -R azpagent:azpagent /azp /home/azpagent
-
-# Cambiar a usuario no-root
-#USER azpagent
-
+# Usuario root
+ENV PATH="/root/n/bin:${PATH}"
 ENV AGENT_ALLOW_RUNASROOT="true"
 
 ENTRYPOINT ["/azp/start.sh"]
