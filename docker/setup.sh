@@ -9,16 +9,16 @@ export DEBIAN_FRONTEND=noninteractive
 # =============================================================================
 # 1. Dependencias base
 # =============================================================================
-echo "1. Dependencias base"
+# echo "1. Dependencias base"
 
-apt-get update -qq
-apt-get install -y -qq \
-  ca-certificates curl gnupg wget lsb-release \
-  libicu-dev libssl-dev unzip make \
-  software-properties-common gettext-base
-rm -rf /var/lib/apt/lists/*
+# apt-get update -qq
+# apt-get install -y -qq \
+#   ca-certificates curl gnupg wget lsb-release \
+#   libicu-dev libssl-dev unzip make \
+#   software-properties-common gettext-base
+# rm -rf /var/lib/apt/lists/*
 
-echo "Dependencias instaladas"
+# echo "Dependencias instaladas"
 
 # =============================================================================
 # 2. Terraform
@@ -27,7 +27,7 @@ echo "2. Terraform"
 
 TMP=$(mktemp)
 wget -qO "$TMP" https://apt.releases.hashicorp.com/gpg
-gpg --batch --yes --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg "$TMP"
+gpg --batch --yes --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg "$TMP" 2>/dev/null || true
 rm -f "$TMP"
 
 CODENAME=$(lsb_release -cs)

@@ -1,0 +1,18 @@
+services:
+  docker-agent-01:
+    container_name: docker-agent-01
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dockeragent:latest
+    networks:
+      - devops
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  devops:
+    driver: bridge
